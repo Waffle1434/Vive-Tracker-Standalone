@@ -59,7 +59,7 @@ namespace Valve.VR
 
             isValid = true;
 
-            var pose = new SteamVR_Utils.RigidTransform(poses[i].mDeviceToAbsoluteTracking);
+            SteamVR_Utils.RigidTransform pose = new SteamVR_Utils.RigidTransform(poses[i].mDeviceToAbsoluteTracking);
 
             if (origin != null)
             {
