@@ -31,10 +31,32 @@ public class SteamVR_Tracker : MonoBehaviour {
     public float rotationSmoothTime = 0f;
     public float3 velocity;
     public float3 angularVelocity;
+    public ETrackingResult tracking;
 
-    Quaternion rot;
+    Quaternion smoothed_rot;
     Quaternion rot_vel;
     bool initial = true;
+
+    public static Matrix4x4 OVRToMatrix4x4(HmdMatrix34_t m_pose) {
+        Matrix4x4 m = default;
+
+        m.m00 = m_pose.m0;
+        m.m01 = m_pose.m1;
+        m.m02 = -m_pose.m2;
+        m.m03 = m_pose.m3;
+
+        m.m10 = m_pose.m4;
+        m.m11 = m_pose.m5;
+        m.m12 = -m_pose.m6;
+        m.m13 = m_pose.m7;
+
+        m.m20 = -m_pose.m8;
+        m.m21 = -m_pose.m9;
+        m.m22 = m_pose.m10;
+        m.m23 = -m_pose.m11;
+
+        return m;
+    }
 
     void Update() {
         if (device == Device.None) return;
@@ -47,14 +69,17 @@ public class SteamVR_Tracker : MonoBehaviour {
         TrackedDevicePose_t pose = poses[i_device];
         if (!pose.bDeviceIsConnected || !pose.bPoseIsValid) return;
 
-        SteamVR_Utils.RigidTransform rt = new SteamVR_Utils.RigidTransform(pose.mDeviceToAbsoluteTracking);
+        Matrix4x4 m = OVRToMatrix4x4(pose.mDeviceToAbsoluteTracking);
+        Quaternion rot = m.GetRotation();
+
         velocity = new(pose.vVelocity.v0, pose.vVelocity.v1, pose.vVelocity.v2);
         angularVelocity = new(pose.vAngularVelocity.v0, pose.vAngularVelocity.v1, pose.vAngularVelocity.v2);
+        tracking = pose.eTrackingResult;
 
-        rot = MathUtil.SmoothDamp(initial ? rt.rot : rot, rt.rot, ref rot_vel, rotationSmoothTime);
+        smoothed_rot = MathUtil.SmoothDamp(initial ? rot : smoothed_rot, rot, ref rot_vel, rotationSmoothTime);
 
-        if (setPosition) transform.localPosition = rt.pos;
-        if (setRotation) transform.localRotation = rot;
+        if (setPosition) transform.localPosition = m.GetPosition();
+        if (setRotation) transform.localRotation = smoothed_rot;
 
         initial = false;
     }

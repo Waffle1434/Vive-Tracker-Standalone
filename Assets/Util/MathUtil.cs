@@ -167,10 +167,10 @@ namespace Util {
 
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Vector3 GetPosition(Matrix4x4 matrix) => new Vector3(matrix.m03, matrix.m13, matrix.m23);
+        public static Vector3 GetPosition(this Matrix4x4 matrix) => new Vector3(matrix.m03, matrix.m13, matrix.m23);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Quaternion GetRotation(Matrix4x4 matrix) => Quaternion.LookRotation(new Vector3(matrix.m02, matrix.m12, matrix.m22), new Vector3(matrix.m01, matrix.m11, matrix.m21));
+        public static Quaternion GetRotation(this Matrix4x4 matrix) => Quaternion.LookRotation(new Vector3(matrix.m02, matrix.m12, matrix.m22), new Vector3(matrix.m01, matrix.m11, matrix.m21));
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void SetMatrix(this Transform transform, Matrix4x4 matrix, bool scale = false) {
