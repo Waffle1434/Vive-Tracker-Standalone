@@ -1,62 +1,61 @@
 using Unity.Mathematics;
 using UnityEngine;
 using Util;
-using static Valve.VR.SteamVR_TrackedObject;
+using Valve.VR;
 
-namespace Valve.VR {
-    public class SteamVR_Tracker : MonoBehaviour {
-        public EIndex index;
+public class SteamVR_Tracker : MonoBehaviour {
+    public enum Device : int {
+        None = -1,
+        Hmd = (int)OpenVR.k_unTrackedDeviceIndex_Hmd,
+        Device1,
+        Device2,
+        Device3,
+        Device4,
+        Device5,
+        Device6,
+        Device7,
+        Device8,
+        Device9,
+        Device10,
+        Device11,
+        Device12,
+        Device13,
+        Device14,
+        Device15,
+        Device16
+    }
 
-        public bool setPosition = true;
-        public bool setRotation = true;
+    public Device device;
+    public bool setPosition = true;
+    public bool setRotation = true;
+    public float rotationSmoothTime = 0f;
+    public float3 velocity;
+    public float3 angularVelocity;
 
-        public float rotationSmoothTime = 0f;
+    Quaternion rot;
+    Quaternion rot_vel;
+    bool initial = true;
 
-        public float3 velocity;
-        public float3 angularVelocity;
+    void Update() {
+        if (device == Device.None) return;
 
-        public bool isValid { get; private set; }
+        TrackedDevicePose_t[] poses = SteamVR_Standalone.Instance.poses;
 
-        SteamVR_Events.Action newPosesAction;
-        Quaternion rot;
-        Quaternion rot_vel;
-        uint update = 0;
+        int i_device = (int)device;
+        if (poses.Length <= i_device) return;
 
-        SteamVR_Tracker() => newPosesAction = SteamVR_Events.NewPosesAction(OnNewPoses);
+        TrackedDevicePose_t pose = poses[i_device];
+        if (!pose.bDeviceIsConnected || !pose.bPoseIsValid) return;
 
-        void OnNewPoses(TrackedDevicePose_t[] poses) {
-            if (index == EIndex.None) return;
+        SteamVR_Utils.RigidTransform rt = new SteamVR_Utils.RigidTransform(pose.mDeviceToAbsoluteTracking);
+        velocity = new(pose.vVelocity.v0, pose.vVelocity.v1, pose.vVelocity.v2);
+        angularVelocity = new(pose.vAngularVelocity.v0, pose.vAngularVelocity.v1, pose.vAngularVelocity.v2);
 
-            isValid = false;
-            int i = (int)index;
-            if (poses.Length <= i || !poses[i].bDeviceIsConnected || !poses[i].bPoseIsValid) return;
+        rot = MathUtil.SmoothDamp(initial ? rt.rot : rot, rt.rot, ref rot_vel, rotationSmoothTime);
 
-            isValid = true;
-            update++;
+        if (setPosition) transform.localPosition = rt.pos;
+        if (setRotation) transform.localRotation = rot;
 
-            TrackedDevicePose_t pose = poses[i];
-            SteamVR_Utils.RigidTransform rt = new SteamVR_Utils.RigidTransform(pose.mDeviceToAbsoluteTracking);
-            velocity = new(pose.vVelocity.v0, pose.vVelocity.v1, pose.vVelocity.v2);
-            angularVelocity = new(pose.vAngularVelocity.v0, pose.vAngularVelocity.v1, pose.vAngularVelocity.v2);
-
-            rot = MathUtil.SmoothDamp(update == 1 ? rt.rot : rot, rt.rot, ref rot_vel, rotationSmoothTime);
-
-            if (setPosition) transform.localPosition = rt.pos;
-            if (setRotation) transform.localRotation = rot;
-        }
-
-        void OnEnable() {
-            if (SteamVR_Render.instance == null) {
-                enabled = false;
-                return;
-            }
-
-            newPosesAction.enabled = true;
-        }
-
-        void OnDisable() {
-            newPosesAction.enabled = false;
-            isValid = false;
-        }
+        initial = false;
     }
 }
