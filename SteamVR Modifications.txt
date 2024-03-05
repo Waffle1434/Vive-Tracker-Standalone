@@ -5,7 +5,7 @@ Null Driver HMD
         "requireHmd": false,
         "forcedDriver": "null",
         "activateMultipleDrivers": true,
-Never turn off null HMD
+Never turn off null HMD (un-needed?)
     C:\Program Files (x86)\Steam\steamapps\common\SteamVR\resources\settingsschema.vrsettings
         Settings_Power_TurnOffScreensTimeout
             {"value": "0", "label": "#SettingsTime_Never" },
