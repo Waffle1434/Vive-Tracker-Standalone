@@ -2,6 +2,7 @@ Using HTC Vive Tracker 3.0 without a headset connected.
 Working camera example: `Tracker.unity`
 
 # SteamVR Modifications
+SteamVR will not work out of the box without a headset, some modifications are required:
 ```
 Null Driver HMD
     C:\Program Files (x86)\Steam\steamapps\common\SteamVR\drivers\null\resources\settings\default.vrsettings
